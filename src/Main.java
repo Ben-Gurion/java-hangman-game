@@ -8,7 +8,8 @@ public class Main{
     public static void main(String[] args) {
 
         System.out.println("\n========== HANGMAN GAME =========");
-        System.out.println("Guess the hidden word one letter at a time before the hangman is fully drawn.\n");
+        System.out.println("Guess the hidden word one letter at a time before the hangman is fully drawn.");
+        System.out.println("Tip: If you type more than one character, only the first letter will be considered.\n");
 
         Scanner scanner = new Scanner(System.in);
 
@@ -20,6 +21,8 @@ public class Main{
             String filePath = "src/hangman_words.txt";
             File wordsFile = new File(filePath);
             int wrongGuesses = 0;
+            //Keep track of guessed letters so user doesn't have to guess again
+            ArrayList<Character> guessedCharacters = new ArrayList<>();
 
             try(BufferedReader reader = new BufferedReader(new FileReader(wordsFile))){
 
@@ -36,7 +39,7 @@ public class Main{
 
                 //Generate a secretWord
                 Random random = new Random();
-                int secretWordIndex = random.nextInt(0, secretWords.size());
+                int secretWordIndex = random.nextInt(secretWords.size());
                 String secretWord = secretWords.get(secretWordIndex).toUpperCase();
                 //For testing
 //               String secretWord = "APPLE";
@@ -60,10 +63,29 @@ public class Main{
                         break;
                     }
 
-                    //Ask user to guess a letter
-                    System.out.print("\nGuess a letter: ");
-                    char guessedCharacter = scanner.next().toUpperCase().charAt(0);
+                    // Show all guessed characters if they are greater than 0
+                    if(!guessedCharacters.isEmpty()){
+                        System.out.println("Letters Guessed: " + guessedCharacters);
+                    }
 
+                    char guessedCharacter = '\0';
+
+                    do{
+                        //Ask user to guess a letter
+
+                        if(guessedCharacters.contains(guessedCharacter)){
+                            System.out.print("Guess another letter, you already guessed that: ");
+                        }else{
+                            System.out.print("\nGuess a letter: ");
+                        }
+                        guessedCharacter = scanner.next().trim().toUpperCase().charAt(0);
+
+                    }while(!Character.isLetter(guessedCharacter) || guessedCharacters.contains(guessedCharacter));
+
+
+                    if(!guessedCharacters.contains(guessedCharacter)){
+                        guessedCharacters.add(guessedCharacter);
+                    }
 
 
                     //Check if the guessed letter is in the secret word
@@ -77,14 +99,16 @@ public class Main{
 
                         }
 
+
+
                         printWordState(wordState);
                         System.out.println("✅ CORRECT");
 
                     }else{ // character is not found
                         wrongGuesses ++;
                         printWordState(wordState);
-                        System.out.println("❌ WRONG");
-                        System.out.println(printHangMan(wrongGuesses));
+                        System.out.printf("❌ (%d of 6 Wrong Guesses)%n", wrongGuesses);
+                        System.out.println(buildHangMan(wrongGuesses));
 
                     }
 
@@ -93,14 +117,6 @@ public class Main{
                 if (!wordState.contains('_')){
                     System.out.println("🏆😎 YOU WIN");
                 }
-
-
-
-
-
-
-
-
 
             } catch (FileNotFoundException e) {
                 System.out.println("The word(s) file was not found! Add the hangman_words.txt file then proceed!");
@@ -124,11 +140,11 @@ public class Main{
     static void printWordState(ArrayList<Character> wordState){
         System.out.printf("Word: (%d letters): ", wordState.size());
         for (char c: wordState){
-            System.out.print(c + " ");
+            System.out.printf("%s ",c);
         }
     }
 
-    static String printHangMan(int wrongGuesses){
+    static String buildHangMan(int wrongGuesses){
         return switch (wrongGuesses){
             case 1-> """
                       +---+
